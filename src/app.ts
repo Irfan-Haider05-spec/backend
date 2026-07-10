@@ -218,6 +218,4 @@ app.use((req: Request, res: Response) => {
 });
 
 export default app;
-
-
-// Comment added to check the CI.
+// Comment added to check the CI working properly or not.

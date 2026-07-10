@@ -11,7 +11,7 @@ on:
   pull_request:
     branches: [main, master, develop]
   push:
-    branches: [main]
+    branches: [main, master, develop]
 
 jobs:
   build-and-test:
