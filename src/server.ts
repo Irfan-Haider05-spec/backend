@@ -69,7 +69,7 @@ async function main() {
 
     socketHelper.socket(io);
 
-    // @ts-expect-error - augmenting the global object with a socket.io instance for cross-module access
+   
     global.io = io;
 
     // cleanup interval (store reference for shutdown)

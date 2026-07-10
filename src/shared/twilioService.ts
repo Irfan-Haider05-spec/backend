@@ -14,6 +14,6 @@ export const sendOtp = async (phone: string, otp: string) => {
     });
     return message.sid;
   } catch (error) {
-    throw new Error("Failed to send OTP", { cause: error });
+    throw new Error("Failed to send OTP");
   }
 };
