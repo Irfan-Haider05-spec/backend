@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+
+# Environment variables
+.env
+.env.*.local
+.env-old
+
+
+# Build output
+dist
+build
+
+# Logs
+logs
+*.log
+winston
+
+# Runtime uploads (if generated files)
+uploads
+
+# Coverage / testing
+coverage
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode
+.idea
+
+# Docker (optional cache)
+docker-compose.override.yml
+
+# PM2 logs (if using pm2)
+pids
+*.pid
+*.seed
+
+# Optional: temp files
+tmp
+temp

@@ -1,0 +1,57 @@
+# CI — runs on every PR and push to main/develop. This is the quality gate;
+# it never deploys anything. Pair this with a GitHub branch protection rule
+# on `main` requiring the "build-and-test" job to pass before merge
+# (Settings → Branches → Branch protection rules).
+#
+# No secrets required for this workflow.
+
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0-jammy
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies (exact, from lockfile)
+        run: npm install
+
+      # Once an ESLint config is added to the repo, uncomment:
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check & build
+        run: npm run build
+
+      - name: Run Tests
+        run: npm test
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
+          SESSION_SECRET: "temporary_secret_for_github_actions_testing"
+          # GitHub secrets ko env variables mian map kar rahy hain
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+      - name: Dependency vulnerability audit
+        run: npm audit --audit-level=high
+        continue-on-error: true # flip to blocking once the existing dependency tree is cleaned up

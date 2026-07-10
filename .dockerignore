@@ -1,0 +1,63 @@
+# Node modules (server & local dev)
+node_modules
+
+# TypeScript source (compiled to dist in builder stage)
+# Keeping src out of production image
+src
+
+# Build artifacts (rebuilt inside Docker)
+dist
+
+# Environment files — NEVER include in image
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+winston
+
+# Uploaded files (mounted as volume in production)
+uploads
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Editor configs
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__
+
+# CI/CD
+.github
+
+# Zip archives
+*.zip
+*.zip.zip
+
+# README
+README.md
+
+# TypeScript config (not needed at runtime)
+tsconfig.json
+
+# PM2 logs
+.pm2
+
+# pnpm store
+.npm-store

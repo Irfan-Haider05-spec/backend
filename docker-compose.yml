@@ -1,0 +1,109 @@
+# ============================================================
+# docker-compose.yml — Local Development & Staging
+# ============================================================
+# Usage:
+#   Start:   docker compose up -d
+#   Stop:    docker compose down
+#   Logs:    docker compose logs -f backend
+#   Rebuild: docker compose up -d --build
+
+version: '3.9'
+
+services:
+  # ─────────────────────────────────────────────
+  # Backend API
+  # ─────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production       # Use the production stage
+    container_name: mlitech_backend
+    restart: unless-stopped
+    ports:
+      - "5004:5004"            # host:container
+    env_file:
+      - .env                   # Load environment variables from .env file
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - uploads_data:/app/uploads    # Persist uploaded files
+      - winston_logs:/app/winston    # Persist logs
+    depends_on:
+      mongo:
+        condition: service_healthy   # Wait for MongoDB to be ready
+    networks:
+      - mlitech_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ─────────────────────────────────────────────
+  # MongoDB (Local Dev Only)
+  # ─────────────────────────────────────────────
+  # NOTE: In production, use your managed MongoDB URI in .env
+  # and remove this service (or keep it for local dev only)
+  mongo:
+    image: mongo:7.0-jammy
+    container_name: mlitech_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"         # Expose for local MongoDB Compass access
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS:-changeme}
+      MONGO_INITDB_DATABASE: mlitech_db
+    volumes:
+      - mongo_data:/data/db   # Persist database data
+    networks:
+      - mlitech_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mongo-init:
+    image: mongo:7.0-jammy
+    container_name: mlitech_mongo_init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - mlitech_network
+    entrypoint: >
+      mongosh --host mongo:27017 --eval "
+        try {
+          rs.status();
+          print('Replica set already initialized');
+        } catch (e) {
+          print('Initializing replica set...');
+          rs.initiate({
+            _id: 'rs0',
+            members: [{ _id: 0, host: 'mongo:27017' }]
+          });
+        }
+      "
+
+# ─────────────────────────────────────────────
+# Named Volumes (Persistent Storage)
+# ─────────────────────────────────────────────
+volumes:
+  mongo_data:
+    driver: local
+  uploads_data:
+    driver: local
+  winston_logs:
+    driver: local
+
+# ─────────────────────────────────────────────
+# Internal Network
+# ─────────────────────────────────────────────
+networks:
+  mlitech_network:
+    driver: bridge
