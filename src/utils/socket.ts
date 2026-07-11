@@ -8,4 +8,4 @@ export const initSocket = (server: any) => {
   });
 };
 
-export const getIO = () => io;
+export const getIO = () => io || (global as any).io;
